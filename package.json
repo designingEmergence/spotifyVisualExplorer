@@ -1,0 +1,32 @@
+{
+  "name": "spotify_visual_exploer",
+  "version": "0.2.0",
+  "description": "Visually represents your saved artists in a node based graph.",
+  "main": "app.js",
+  "scripts": {
+    "test": "node ./app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/designingemergene/spotifyVisualExplorer.git"
+  },
+  "keywords": [
+    "Spotify",
+    "Visual",
+    "Explorer"
+  ],
+  "author": "Prakhar Mehrotra",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/designingemergene/spotifyVisualExplorer/issues"
+  },
+  "homepage": "https://github.com/designingemergene/spotifyVisualExplorer#readme",
+  "dependencies": {
+    "async": "^2.6.1",
+    "events": "^3.0.0",
+    "express": "^4.16.3",
+    "querystring": "^0.2.0",
+    "request": "^2.87.0",
+    "spotify-web-api-node": "^3.1.1"
+  }
+}
