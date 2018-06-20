@@ -1,11 +1,7 @@
 var express = require('express');
-var events = require('events');
 var request = require('request');
-var querystring = require('querystring');
 var Spotify = require('spotify-web-api-node');
-var async = require('async');
 
-var eventEmitter = new events.EventEmitter();
 
 var scopes = ['user-read-private', 'user-library-read'],
 	clientId = '596d938cb0d24e4fbc2d3fb2c34a94e5',
@@ -21,6 +17,7 @@ var spotify = new Spotify({
 	clientSecret: clientSecret
 });
 
+app.set('view engine', 'ejs');
 
 app.use(express.static(__dirname + '/public'));
  
@@ -50,42 +47,43 @@ app.get('/callback', function(req, res){
 			}).then(function(data){
 				return getAllArtists(data.body.total);
 			}).then(processArtists)
-			.then(console.log)
+			.then(function(data){
+				console.log(data);
+
+				res.render('pages/visualize', {
+					artists:data
+				});
+
+			})
 			.catch(function(err){
 				console.log(err.message);
 			});
 
-			res.redirect('/#' +
-				querystring.stringify({
-					access_token: access_token,
-					refresh_token: refresh_token
-				}));
-
+		
 			}, function (err){
 				console.error('Error: '+ err);
 				res.redirect('/#' + err);
 			});
 });
 
-app.get('/refresh_token', function(req, res){
+// app.get('/refresh_token', function(req, res){
 
-	spotify.refreshAccessToken().then(
-		function(data){
-			console.log('Access token refreshed');
-			access_token = data.body['access_token'];
-			spotify.setAccessToken(access_token);
+// 	spotify.refreshAccessToken().then(
+// 		function(data){
+// 			console.log('Access token refreshed');
+// 			access_token = data.body['access_token'];
+// 			spotify.setAccessToken(access_token);
 
-			res.send({'access_token': access_token});
+// 			res.send({'access_token': access_token});
 
-		}, function(err){
-			console.error("Access token not refreshed: ",err);
-		});
-});
+// 		}, function(err){
+// 			console.error("Access token not refreshed: ",err);
+// 		});
+// });
 
 console.log('Listening on 8888');
 app.listen(8888);
 
-eventEmitter.on('collected artists', processArtists);
 
 
 //-------------------- FUNCTIONS ---------------------------

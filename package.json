@@ -23,6 +23,7 @@
   "homepage": "https://github.com/designingemergene/spotifyVisualExplorer#readme",
   "dependencies": {
     "async": "^2.6.1",
+    "ejs": "^2.6.1",
     "events": "^3.0.0",
     "express": "^4.16.3",
     "querystring": "^0.2.0",

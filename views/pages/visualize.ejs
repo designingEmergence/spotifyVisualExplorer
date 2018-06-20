@@ -1,0 +1,16 @@
+<html lang="en">
+	<head>
+		<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+		<h1> Visualize Artists</h1>
+	</head>
+
+	<body>
+		<h2 class="text-center text-muted">Artists to Visualize</h2>
+		<ul>
+			<% artists.forEach(function(artist){ %>
+				<li><%= artist.name %> - <%= artist.count %></li>
+			<% }); %>
+		</ul>
+
+	</body>
+</html>
