@@ -20,6 +20,8 @@ var spotify = new Spotify({
 app.set('view engine', 'ejs');
 
 app.use(express.static(__dirname + '/public'));
+
+app.use('/scripts', express.static(__dirname + '/node_modules/d3/dist'));
  
 app.get('/login', function(req, res){
 	res.redirect(spotify.createAuthorizeURL(scopes,state));
