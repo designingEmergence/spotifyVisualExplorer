@@ -57,6 +57,10 @@ var artistNodeGraph = function(){
 
 	}
 
+	function update(){
+		
+	}
+
 	graph.width = function(value){
 		if(!arguments.length) {return width;}
 		width = value;

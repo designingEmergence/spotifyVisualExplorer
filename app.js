@@ -118,7 +118,7 @@ function getAllArtists(numArtists){
 		for (i = 0; i<totalTracks; i += 50){
 			getSavedArtists(50, i, userArtists, function(artists){
 				userArtists = artists;
-				console.log("Tracks: "+ tracksProcessed + "  Artists: " + userArtists.length);
+				//console.log("Tracks: "+ tracksProcessed + "  Artists: " + userArtists.length);
 				tracksProcessed += 50;
 				if(tracksProcessed > totalTracks){
 					fulfill(userArtists);
@@ -135,7 +135,7 @@ function getSavedArtists(lim, off, aList, callback){
 			limit:lim,
 			offset: off
 		}).then(function(data){
-				console.log('------------------------------------------');
+				//console.log('------------------------------------------');
 				aList = getArtistsFromTracks(data, aList);
 				callback(aList);
 		}).catch(function(err){
@@ -154,11 +154,15 @@ function getArtistsFromTracks(tracks, artistList){
 }
 
 function pushArtistToList(artist, list){
-
-	if(!list.some(i => i.name === artist.name)){
-		list.push({"name":artist.name,"id":artist.id,"count":1});
+	if(artist.name && !list.some(i => i.name === artist.name)){
+		//console.log(artist.name + "artist request");
+		spotify.getArtist(artist.id)
+		.then(function (data){
+			list.push({"name":artist.name,"id":artist.id, "popularity":data.body.popularity, "count":1});
+		}).catch(function(err){
+			console.error(err.message);
+		});
 	}
-
 	else{
 		list.forEach(function(i){
 			if(i.name === artist.name) i.count ++;
