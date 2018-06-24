@@ -22,6 +22,7 @@ app.set('view engine', 'ejs');
 app.use(express.static(__dirname + '/public'));
 
 app.use('/d3', express.static(__dirname + '/node_modules/d3/dist'));
+app.use('/js', express.static(__dirname + 'public/js'));
  
 app.get('/login', function(req, res){
 	res.redirect(spotify.createAuthorizeURL(scopes,state));
@@ -60,12 +61,11 @@ app.get('/callback', function(req, res){
 			.catch(function(err){
 				console.log(err.message);
 			});
-
 		
-			}, function (err){
-				console.error('Error: '+ err);
-				res.redirect('/#' + err);
-			});
+		}, function (err){
+			console.error('Error: '+ err);
+			res.redirect('/#' + err);
+		});
 });
 
 // app.get('/refresh_token', function(req, res){
@@ -103,10 +103,8 @@ function processArtists (userArtists){
 function sortArray(property){
 	return function(x, y){
 		return ((x[property] === y[property]) ? 0 : ((x[property] > y[property]) ? -1 : 1));
-	}
+	};
 }
-
-
 
 //FUNCTIONS FOR GETTING ARTISTS
 
@@ -147,7 +145,7 @@ function getSavedArtists(lim, off, aList, callback){
 
 function getArtistsFromTracks(tracks, artistList){
 
-	for (t in tracks.body.items){
+	for (var t in tracks.body.items){
 		var track = tracks.body.items[t].track;
 		var artist = track.artists[0];
 		artistList = pushArtistToList(artist, artistList);
