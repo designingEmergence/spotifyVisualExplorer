@@ -1,7 +1,12 @@
 var express = require('express');
 var request = require('request');
 var Spotify = require('spotify-web-api-node');
+var PromiseThrottle = require('promise-throttle');
 
+var promiseThrottle = new PromiseThrottle({
+	requstPerSecond:10,
+	promiseImplementation: Promise
+});
 
 var scopes = ['user-read-private', 'user-library-read'],
 	clientId = '596d938cb0d24e4fbc2d3fb2c34a94e5',
@@ -34,12 +39,12 @@ app.get('/callback', function(req, res){
 
 	spotify.authorizationCodeGrant(code).then(
 		function(data){
-			console.log('Token expires in '+ data.body['expires_in']);
-			console.log('Access token: '+ data.body['access_token']);
-			console.log('Refresh token: '+ data.body['refresh_token']);
+			console.log('Token expires in '+ data.body.expires_in);
+			console.log('Access token: '+ data.body.access_token);
+			console.log('Refresh token: '+ data.body.refresh_token);
 
-			var access_token = data.body['access_token'],
-				refresh_token = data.body['refresh_token'];
+			var access_token = data.body.access_token,
+				refresh_token = data.body.refresh_token;
 
 			spotify.setAccessToken(access_token);
 			spotify.setRefreshToken(refresh_token);
@@ -48,11 +53,11 @@ app.get('/callback', function(req, res){
 				limit:1,
 				offset:0
 			}).then(function(data){
+				console.log("Tracks to harvest: " + data.body.total);
 				return getAllArtists(data.body.total);
 			}).then(processArtists)
 			.then(function(data){
 				console.log(data);
-
 				res.render('pages/visualize', {
 					artists:data
 				});
@@ -118,7 +123,7 @@ function getAllArtists(numArtists){
 		for (i = 0; i<totalTracks; i += 50){
 			getSavedArtists(50, i, userArtists, function(artists){
 				userArtists = artists;
-				//console.log("Tracks: "+ tracksProcessed + "  Artists: " + userArtists.length);
+				console.log("Tracks: "+ tracksProcessed + "  Artists: " + userArtists.length);
 				tracksProcessed += 50;
 				if(tracksProcessed > totalTracks){
 					fulfill(userArtists);
@@ -147,17 +152,18 @@ function getArtistsFromTracks(tracks, artistList){
 
 	for (var t in tracks.body.items){
 		var track = tracks.body.items[t].track;
-		var artist = track.artists[0];
+		var artist = track.artists[0]; //TODO add more than one artist per song 
 		artistList = pushArtistToList(artist, artistList);
 	}
 	return artistList;
 }
 
 function pushArtistToList(artist, list){
-	if(artist.name && !list.some(i => i.name === artist.name)){
-		//console.log(artist.name + "artist request");
-		spotify.getArtist(artist.id)
-		.then(function (data){
+	if(!list.some(i => i.name === artist.name)){
+		console.log(artist.id);
+		promiseThrottle.add(getArtistData.bind(this, artist.id))//fix promiseThrottle
+		.then(function(data){
+			console.log(list.length);
 			list.push({"name":artist.name,"id":artist.id, "popularity":data.body.popularity, "count":1});
 		}).catch(function(err){
 			console.error(err.message);
@@ -170,6 +176,19 @@ function pushArtistToList(artist, list){
 	}
 	return list;
 }
+
+var getArtistData = function(artistID){
+	return new Promise(function (res, rej){
+		console.log(artistID);
+		spotify.getArtist(artistID)
+		.then(function (data){
+			res(data);
+		})
+		.catch(function(err){
+			console.error(err.message);
+		});
+	});
+};
 
 
 

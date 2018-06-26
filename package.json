@@ -27,6 +27,7 @@
     "ejs": "^2.6.1",
     "events": "^3.0.0",
     "express": "^4.16.3",
+    "promise-throttle": "^1.0.0",
     "querystring": "^0.2.0",
     "request": "^2.87.0",
     "spotify-web-api-node": "^3.1.1"
