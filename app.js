@@ -1,12 +1,7 @@
 var express = require('express');
 var request = require('request');
 var Spotify = require('spotify-web-api-node');
-var PromiseThrottle = require('promise-throttle');
 
-var promiseThrottle = new PromiseThrottle({
-	requstPerSecond:10,
-	promiseImplementation: Promise
-});
 
 var scopes = ['user-read-private', 'user-library-read'],
 	clientId = '596d938cb0d24e4fbc2d3fb2c34a94e5',
@@ -160,14 +155,8 @@ function getArtistsFromTracks(tracks, artistList){
 
 function pushArtistToList(artist, list){
 	if(!list.some(i => i.name === artist.name)){
-		console.log(artist.id);
-		promiseThrottle.add(getArtistData.bind(this, artist.id))//fix promiseThrottle
-		.then(function(data){
-			console.log(list.length);
-			list.push({"name":artist.name,"id":artist.id, "popularity":data.body.popularity, "count":1});
-		}).catch(function(err){
-			console.error(err.message);
-		});
+
+		list.push({"name":artist.name,"id":artist.id, "count":1});
 	}
 	else{
 		list.forEach(function(i){
@@ -177,18 +166,7 @@ function pushArtistToList(artist, list){
 	return list;
 }
 
-var getArtistData = function(artistID){
-	return new Promise(function (res, rej){
-		console.log(artistID);
-		spotify.getArtist(artistID)
-		.then(function (data){
-			res(data);
-		})
-		.catch(function(err){
-			console.error(err.message);
-		});
-	});
-};
+
 
 
 
