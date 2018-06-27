@@ -52,7 +52,7 @@ app.get('/callback', function(req, res){
 				return getAllArtists(data.body.total);
 			}).then(processArtists)
 			.then(function(data){
-				console.log(data);
+				//console.log(data);
 				res.render('pages/visualize', {
 					artists:data
 				});
@@ -95,9 +95,20 @@ function processArtists (userArtists){
 	var numArtistsDisplayed = 50;
 
 	console.log("Processing " + userArtists.length + " artists........");
+
+	userArtists.forEach(function(artist){
+		spotify.getArtist(artist.id) //TODO fix too many requests
+		.then(function(data){
+			artist.popularity = data.body.popularity;
+			return artist;
+		}).then(console.log);
+	});
+
+	//console.log(userArtists);
 	culledArtists = userArtists.sort(sortArray('count')).slice(0,numArtistsDisplayed);
-	
+
 	return culledArtists;
+
 }
 
 function sortArray(property){
@@ -155,7 +166,6 @@ function getArtistsFromTracks(tracks, artistList){
 
 function pushArtistToList(artist, list){
 	if(!list.some(i => i.name === artist.name)){
-
 		list.push({"name":artist.name,"id":artist.id, "count":1});
 	}
 	else{
