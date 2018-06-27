@@ -1,6 +1,12 @@
 var express = require('express');
 var request = require('request');
 var Spotify = require('spotify-web-api-node');
+var PromiseThrottle = require('promise-throttle');
+
+var promiseThrottle = new PromiseThrottle({
+	requestsPerSecond: 10,
+	promiseImplementation: Promise
+});
 
 
 var scopes = ['user-read-private', 'user-library-read'],
@@ -87,7 +93,6 @@ console.log('Listening on 8888');
 app.listen(8888);
 
 
-
 //-------------------- FUNCTIONS ---------------------------
 
 function processArtists (userArtists){
@@ -97,7 +102,7 @@ function processArtists (userArtists){
 	console.log("Processing " + userArtists.length + " artists........");
 
 	userArtists.forEach(function(artist){
-		spotify.getArtist(artist.id) //TODO fix too many requests
+		promiseThrottle.add(getArtistData.bind(this, artist.id)) //TODO fix too many requests
 		.then(function(data){
 			artist.popularity = data.body.popularity;
 			return artist;
@@ -108,8 +113,16 @@ function processArtists (userArtists){
 	culledArtists = userArtists.sort(sortArray('count')).slice(0,numArtistsDisplayed);
 
 	return culledArtists;
-
 }
+
+var getArtistData = function(artistID){
+	return new Promise(function(res, rej){
+		spotify.getArtist(artistID)
+		.then(function (data){
+			res(data);
+		});
+	});
+};
 
 function sortArray(property){
 	return function(x, y){
