@@ -101,16 +101,16 @@ function processArtists (userArtists){
 
 	console.log("Processing " + userArtists.length + " artists........");
 
-	userArtists.forEach(function(artist){
+	//console.log(userArtists);
+	culledArtists = userArtists.sort(sortArray('count')).slice(0,numArtistsDisplayed);
+
+	culledArtists.forEach(function(artist){
 		promiseThrottle.add(getArtistData.bind(this, artist.id)) //TODO fix too many requests
 		.then(function(data){
 			artist.popularity = data.body.popularity;
 			return artist;
 		}).then(console.log);
 	});
-
-	//console.log(userArtists);
-	culledArtists = userArtists.sort(sortArray('count')).slice(0,numArtistsDisplayed);
 
 	return culledArtists;
 }
