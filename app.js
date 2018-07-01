@@ -58,7 +58,8 @@ app.get('/callback', function(req, res){
 				return getAllArtists(data.body.total);
 			}).then(processArtists)
 			.then(function(data){
-				//console.log(data);
+				console.log("Number of artists sent: " + data.length);
+				console.log(data);
 				res.render('pages/visualize', {
 					artists:data
 				});
@@ -97,23 +98,39 @@ app.listen(8888);
 
 function processArtists (userArtists){
 
-	var numArtistsDisplayed = 50;
+	return new Promise(function (res, rej){
+		var numArtistsDisplayed = 55;
+		var numArtistsToGet = 50;
 
-	console.log("Processing " + userArtists.length + " artists........");
+		console.log("Processing " + userArtists.length + " artists........");
 
-	//console.log(userArtists);
-	culledArtists = userArtists.sort(sortArray('count')).slice(0,numArtistsDisplayed);
+		//console.log(userArtists);
+		userArtists = userArtists.sort(sortArray('count'));
 
-	culledArtists.forEach(function(artist){
-		promiseThrottle.add(getArtistData.bind(this, artist.id)) //TODO fix too many requests
-		.then(function(data){
-			artist.popularity = data.body.popularity;
-			return artist;
-		}).then(console.log);
+		var processedArtists = [];
+
+		for (i = 0; i<numArtistsDisplayed; i+=numArtistsToGet){
+			count = 0;
+			artistGroup = userArtists.slice(i,Math.min(numArtistsToGet+i,numArtistsDisplayed));
+			spotify.getArtists(artistGroup.map(a => a.id))
+			.then(function (data){
+				console.log("---------------------------------------");
+				data.body.artists.forEach(function (artist){
+					listArtist = userArtists.find(x => x.id === artist.id);
+					listArtist.popularity = artist.popularity;
+					listArtist.genre = artist.genres[0];
+					listArtist.image = artist.images[0];
+					processedArtists.push(listArtist);
+					count ++;
+					if(count === numArtistsDisplayed) {
+						res(processedArtists);
+					}
+				}); 
+			});
+		}
 	});
-
-	return culledArtists;
 }
+
 
 var getArtistData = function(artistID){
 	return new Promise(function(res, rej){
