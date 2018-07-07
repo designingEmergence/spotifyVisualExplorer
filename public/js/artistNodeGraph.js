@@ -4,6 +4,7 @@ var artistNodeGraph = function(){
 
 	function graph(selection){
 		var data = selection.datum();
+		console.log(data);
 		var div = selection,
 			svg = div.selectAll('svg');
 

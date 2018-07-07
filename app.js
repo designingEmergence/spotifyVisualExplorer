@@ -2,6 +2,7 @@ var express = require('express');
 var request = require('request');
 var Spotify = require('spotify-web-api-node');
 var PromiseThrottle = require('promise-throttle');
+var _ = require('lodash');
 
 var promiseThrottle = new PromiseThrottle({
 	requestsPerSecond: 10,
@@ -96,50 +97,7 @@ app.listen(8888);
 
 //-------------------- FUNCTIONS ---------------------------
 
-function processArtists (userArtists){
 
-	return new Promise(function (res, rej){
-		var numArtistsDisplayed = 55;
-		var numArtistsToGet = 50;
-
-		console.log("Processing " + userArtists.length + " artists........");
-
-		//console.log(userArtists);
-		userArtists = userArtists.sort(sortArray('count'));
-
-		var processedArtists = [];
-
-		for (i = 0; i<numArtistsDisplayed; i+=numArtistsToGet){
-			count = 0;
-			artistGroup = userArtists.slice(i,Math.min(numArtistsToGet+i,numArtistsDisplayed));
-			spotify.getArtists(artistGroup.map(a => a.id))
-			.then(function (data){
-				console.log("---------------------------------------");
-				data.body.artists.forEach(function (artist){
-					listArtist = userArtists.find(x => x.id === artist.id);
-					listArtist.popularity = artist.popularity;
-					listArtist.genre = artist.genres[0];
-					listArtist.image = artist.images[0];
-					processedArtists.push(listArtist);
-					count ++;
-					if(count === numArtistsDisplayed) {
-						res(processedArtists);
-					}
-				}); 
-			});
-		}
-	});
-}
-
-
-var getArtistData = function(artistID){
-	return new Promise(function(res, rej){
-		spotify.getArtist(artistID)
-		.then(function (data){
-			res(data);
-		});
-	});
-};
 
 function sortArray(property){
 	return function(x, y){
@@ -161,7 +119,7 @@ function getAllArtists(numArtists){
 				userArtists = artists;
 				console.log("Tracks: "+ tracksProcessed + "  Artists: " + userArtists.length);
 				tracksProcessed += 50;
-				if(tracksProcessed > totalTracks){
+				if(tracksProcessed >= totalTracks){
 					fulfill(userArtists);
 				}
 			});
@@ -206,6 +164,50 @@ function pushArtistToList(artist, list){
 	return list;
 }
 
+function processArtists (userArtists){
+
+	return new Promise(function (res, rej){
+		var numArtistsDisplayed = 55;
+		var numArtistsToGet = 50;
+
+		console.log("Processing " + userArtists.length + " artists........");
+
+		userArtists = userArtists.sort(sortArray('count'));
+
+		var processedArtists = [];
+
+		for (i = 0; i<numArtistsDisplayed; i+=numArtistsToGet){
+			count = 0;
+			artistGroup = userArtists.slice(i,Math.min(numArtistsToGet+i,numArtistsDisplayed));
+			
+			spotify.getArtists(artistGroup.map(a => a.id)) //TODO turn into separate function?
+			.then(function (data){
+				console.log("---------------------------------------");
+				data.body.artists.forEach(function (artist){
+
+					spotify.getArtistRelatedArtists(artist.id)
+					.then(function (related){
+						listArtist = userArtists.find(x => x.id === artist.id);
+						listArtist.popularity = artist.popularity;
+						listArtist.genre = artist.genres[0];
+						listArtist.image = artist.images[0];
+						listArtist.relatedArtists = [];
+						related.body.artists.forEach(function(art){
+							listArtist.relatedArtists.push(_.omit(art, ["external_urls", "followers", "href", "type", "uri"]));
+						});
+
+						processedArtists.push(listArtist);
+						count ++;
+						console.log("Count: " + count + "/" + numArtistsDisplayed);
+						if(count === numArtistsDisplayed) {
+							res(processedArtists);
+						}
+					});					
+				}); 
+			});
+		}
+	});
+}
 
 
 

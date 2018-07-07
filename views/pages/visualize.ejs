@@ -21,28 +21,6 @@
 			d3.select('#primaryVisualizer').datum(artistList).call(graph);
 		</script>
 
-		<!-- <script type="text/javascript">
-			var svg = d3.select("svg");
-			margin={top:30, right:70, bottom: 30, left:70},
-			width = +svg.attr("width") - margin.left - margin.right,
-			height = +svg.attr("height") - margin.top - margin.bottom;
-
-			var circles = d3.selectAll("circle");
-
-			circles.style("fill","rgb(255,40,40,.05)")
-			.data(artistList)
-			.transition()
-			.attr("r", function(d,i){
-				return d.count*2;
-			})
-			.duration(1000)
-			.delay(500)
-			.ease("sinInOut");
-
-			
-		</script> -->	
-
-
 		<h2 class="text-center text-muted">Artists to Visualize</h2>
 		<ul>
 			<% artists.forEach(function(artist){ %>
