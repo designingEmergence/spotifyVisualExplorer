@@ -3,6 +3,7 @@ var request = require('request');
 var Spotify = require('spotify-web-api-node');
 var PromiseThrottle = require('promise-throttle');
 var _ = require('lodash');
+var async = require('async');
 
 var promiseThrottle = new PromiseThrottle({
 	requestsPerSecond: 10,
@@ -170,23 +171,26 @@ function getArtistData (userArtists){
 
 	return new Promise(function (res, rej){
 		var numArtistsDisplayed = 55;
-		var numArtistsToGet = 50;
+		var numArtistsPerReq = 50;
 
-		console.log("Processing " + userArtists.length + " artists........");
+		console.log("Total:  " + userArtists.length + " artists........");
 
 		userArtists = userArtists.sort(sortArray('count'));
 
 		var processedArtists = [];
 
-		for (i = 0; i<numArtistsDisplayed; i+=numArtistsToGet){
+		for (i = 0; i<numArtistsDisplayed; i+=numArtistsPerReq){
 			count = 0;
-			artistGroup = userArtists.slice(i,Math.min(numArtistsToGet+i,numArtistsDisplayed));
+			artistGroup = userArtists.slice(i,Math.min(numArtistsPerReq+i,numArtistsDisplayed));
+
+			//In batches, get the library artists' data.
+			//Then store the data for the artist in a listArtist var and push it to processedArtistArray
 			
-			spotify.getArtists(artistGroup.map(a => a.id)) //TODO turn into separate function?
+			spotify.getArtists(artistGroup.map(a => a.id)) 
 			.then(function (data){
 				//console.log("---------------------------------------");
 				data.body.artists.forEach(function (artist){
-
+					//TODO turn below into separate function?
 					spotify.getArtistRelatedArtists(artist.id)
 					.then(function (related){
 						listArtist = userArtists.find(x => x.id === artist.id);
@@ -197,7 +201,6 @@ function getArtistData (userArtists){
 						related.body.artists.forEach(function(art){
 							listArtist.relatedArtists.push(_.omit(art, ["external_urls", "followers", "href", "type", "uri"]));
 						});
-
 						processedArtists.push(listArtist);
 						count ++;
 						//console.log("Count: " + count + "/" + numArtistsDisplayed);
@@ -214,7 +217,8 @@ function getArtistData (userArtists){
 function processArtists (artistList){
 	return new Promise(function (res,rej){
 		var artistLinks = [];
-
+		//TODO use async.each to determine artist links and pass them onto the front end app.
+		
 		artistList.forEach(function (artist){
 			artist.relatedArtists.forEach(function (relatedArtist){
 				if (_.find(artistList, ['id', relatedArtist.id])){
