@@ -57,12 +57,14 @@ app.get('/callback', function(req, res){
 			}).then(function(data){
 				console.log("Tracks to harvest: " + data.body.total);
 				return getAllArtists(data.body.total);
-			}).then(processArtists)
-			.then(function(data){
-				console.log("Number of artists sent: " + data.length);
-				console.log(data);
+			}).then(getArtistData)
+			.then(processArtists)
+			.then(function(artists, links){
+				console.log("Number of artists sent: " + artists.length);
+				//console.log("Number of links: " + links.length );
+				console.log(links);
 				res.render('pages/visualize', {
-					artists:data
+					artists:artists
 				});
 
 			})
@@ -164,7 +166,7 @@ function pushArtistToList(artist, list){
 	return list;
 }
 
-function processArtists (userArtists){
+function getArtistData (userArtists){
 
 	return new Promise(function (res, rej){
 		var numArtistsDisplayed = 55;
@@ -182,7 +184,7 @@ function processArtists (userArtists){
 			
 			spotify.getArtists(artistGroup.map(a => a.id)) //TODO turn into separate function?
 			.then(function (data){
-				console.log("---------------------------------------");
+				//console.log("---------------------------------------");
 				data.body.artists.forEach(function (artist){
 
 					spotify.getArtistRelatedArtists(artist.id)
@@ -198,7 +200,7 @@ function processArtists (userArtists){
 
 						processedArtists.push(listArtist);
 						count ++;
-						console.log("Count: " + count + "/" + numArtistsDisplayed);
+						//console.log("Count: " + count + "/" + numArtistsDisplayed);
 						if(count === numArtistsDisplayed) {
 							res(processedArtists);
 						}
@@ -206,6 +208,22 @@ function processArtists (userArtists){
 				}); 
 			});
 		}
+	});
+}
+
+function processArtists (artistList){
+	return new Promise(function (res,rej){
+		var artistLinks = [];
+
+		artistList.forEach(function (artist){
+			artist.relatedArtists.forEach(function (relatedArtist){
+				if (_.find(artistList, ['id', relatedArtist.id])){
+					artistLinks.push({"artist": artist.id, "related": relatedArtist.id});
+				}
+			});
+		});
+
+		res(artistList, artistLinks);
 	});
 }
 
